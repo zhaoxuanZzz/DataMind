@@ -1,0 +1,85 @@
+[project]
+name = "datamind"
+version = "1.0.0"
+description = "智能数据分析与可视化工具"
+readme = "../README.md"
+requires-python = ">=3.11,<3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "DataMind Team"}
+]
+
+dependencies = [
+    # FastAPI相关
+    "fastapi==0.109.0",
+    "uvicorn[standard]==0.27.0",
+    "pydantic==2.5.3",
+    "pydantic-settings==2.1.0",
+    
+    # 数据库相关
+    "sqlalchemy==2.0.25",
+    "pymysql==1.1.0",
+    "psycopg2-binary==2.9.9",
+    
+    # LangChain相关
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-community>=0.0.20",
+    "langgraph>=0.0.20",
+    
+    # 向量库相关
+    "chromadb==0.4.22",
+    "pymilvus==2.3.6",
+    
+    # 工具库
+    "loguru==0.7.2",
+    "cachetools==5.3.2",
+    "cryptography==42.0.2",
+    "python-dotenv==1.0.0",
+    
+    # 其他
+    "python-multipart==0.0.6",
+    
+    # 构建兼容（pymilvus 依赖 pkg_resources，避免后续移除）
+    "setuptools<81",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+

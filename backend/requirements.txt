@@ -1,0 +1,31 @@
+# FastAPI相关
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# 数据库相关
+sqlalchemy==2.0.25
+pymysql==1.1.0
+psycopg2-binary==2.9.9
+
+# LangChain相关
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.20
+langgraph>=0.0.20
+
+# 向量库相关
+chromadb==0.4.22
+pymilvus==2.3.6
+
+# 工具库
+loguru==0.7.2
+cachetools==5.3.2
+cryptography==42.0.2
+python-dotenv==1.0.0
+
+# 其他
+python-multipart==0.0.6
+setuptools<81  # pymilvus 依赖 pkg_resources，避免后续移除
