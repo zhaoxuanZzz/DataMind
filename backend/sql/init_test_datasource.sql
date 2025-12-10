@@ -90,3 +90,4 @@ SELECT
     (SELECT COUNT(*) FROM query_templates WHERE data_source_id = (SELECT id FROM data_sources WHERE name = '测试数据库')) AS linked_templates_count;
 
 
+
