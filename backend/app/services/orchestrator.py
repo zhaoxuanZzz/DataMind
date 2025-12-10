@@ -120,6 +120,7 @@ class QueryOrchestrator:
 
 只返回JSON，不要其他内容。"""
 
+
             messages = [
                 SystemMessage(
                     content="你是一个专业的查询意图分析助手，能够准确分析用户的查询意图并返回结构化的JSON结果。"
