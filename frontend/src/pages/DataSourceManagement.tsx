@@ -7,9 +7,10 @@ import { DataSourceResponse, DataSourceType, DataSourceCreate, DataSourceUpdate 
 const { Option } = Select
 
 // 数据源类型默认值配置
-const DATASOURCE_DEFAULTS: Record<DataSourceType, { host: string; port: number }> = {
+const DATASOURCE_DEFAULTS: Record<string, { host: string; port: number }> = {
   [DataSourceType.POSTGRESQL]: { host: '127.0.0.1', port: 5432 },
   [DataSourceType.MYSQL]: { host: '127.0.0.1', port: 3306 },
+  [DataSourceType.SQLITE]: { host: '', port: 0 },
   [DataSourceType.MILVUS]: { host: '127.0.0.1', port: 19530 },
   [DataSourceType.CHROMADB]: { host: '127.0.0.1', port: 8000 },
 }
@@ -193,9 +194,12 @@ export default function DataSourceManagement() {
   ]
 
   return (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <h2>数据源管理</h2>
+    <div className="animate-fade-in-up" style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', margin: 0 }}>数据源管理</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '4px 0 0' }}>配置和管理数据库连接</p>
+        </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           新建数据源
         </Button>
@@ -223,6 +227,7 @@ export default function DataSourceManagement() {
             <Select disabled={!!editingId} onChange={handleTypeChange}>
               <Option value={DataSourceType.MYSQL}>MySQL</Option>
               <Option value={DataSourceType.POSTGRESQL}>PostgreSQL</Option>
+              <Option value={DataSourceType.SQLITE}>SQLite</Option>
               <Option value={DataSourceType.CHROMADB}>ChromaDB</Option>
               <Option value={DataSourceType.MILVUS}>Milvus</Option>
             </Select>

@@ -1,23 +1,250 @@
-* {
+/* ============================================================
+   DataMind Design System — "Warm Studio"
+   Direction: Editorial warmth meets modern data platform.
+   Palette: Deep charcoal shell, warm paper surfaces, coral accent.
+   Typography: Sora (display) + DM Sans (body) + JetBrains Mono (code)
+   ============================================================ */
+
+:root {
+  /* ── Surface ────────────────────────────────── */
+  --surface-ground: #f5f3ee;
+  --surface-card: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-overlay: rgba(0, 0, 0, 0.45);
+
+  /* ── Shell (sidebar / header) ───────────────── */
+  --shell-bg: #111118;
+  --shell-surface: #1a1a24;
+  --shell-text: #b0afc4;
+  --shell-text-active: #ffffff;
+  --shell-accent: #e8553d;
+  --shell-hover: rgba(255, 255, 255, 0.06);
+
+  /* ── Brand / Accent ─────────────────────────── */
+  --accent: #e8553d;
+  --accent-hover: #d44a33;
+  --accent-soft: rgba(232, 85, 61, 0.08);
+  --accent-subtle: rgba(232, 85, 61, 0.14);
+
+  /* ── Semantic ───────────────────────────────── */
+  --blue: #2563eb;
+  --blue-soft: rgba(37, 99, 235, 0.08);
+  --teal: #0d9488;
+  --teal-soft: rgba(13, 148, 136, 0.08);
+  --emerald: #059669;
+  --amber: #d97706;
+  --rose: #e11d48;
+
+  /* ── Text ───────────────────────────────────── */
+  --text-primary: #1e1e2d;
+  --text-secondary: #6b7084;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #ffffff;
+
+  /* ── Border ─────────────────────────────────── */
+  --border: #e5e2db;
+  --border-subtle: #f0ede7;
+  --border-focus: var(--accent);
+
+  /* ── Shadow ─────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-focus: 0 0 0 3px var(--accent-subtle);
+
+  /* ── Radius ─────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Typography ─────────────────────────────── */
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Transitions ────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+}
+
+/* ── Reset & Base ────────────────────────────── */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+html {
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--surface-ground);
+  line-height: 1.6;
 }
 
 #root {
   width: 100%;
   height: 100vh;
 }
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ── Selection ───────────────────────────────── */
+::selection {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+/* ── Ant Design overrides ────────────────────── */
+.ant-layout {
+  background: var(--surface-ground) !important;
+}
+
+.ant-layout-sider {
+  background: var(--shell-bg) !important;
+}
+
+.ant-menu-light,
+.ant-menu-light .ant-menu-sub {
+  background: transparent !important;
+}
+
+.ant-card {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-xs) !important;
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out) !important;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all var(--duration-fast) var(--ease-out) !important;
+}
+
+.ant-btn-primary:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.ant-btn-default {
+  border-radius: var(--radius-md) !important;
+  border-color: var(--border) !important;
+  font-family: var(--font-body) !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector {
+  border-radius: var(--radius-md) !important;
+  border-color: var(--border) !important;
+  font-family: var(--font-body) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-focus) !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-focus) !important;
+}
+
+.ant-tag {
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+}
+
+.ant-tabs-tab {
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+}
+
+.ant-tabs-ink-bar {
+  background: var(--accent) !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--accent) !important;
+}
+
+/* ── Utility animations ──────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--duration-slow) var(--ease-out) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-slow) var(--ease-out) both;
+}
+
+/* stagger helpers */
+.delay-1 { animation-delay: 60ms; }
+.delay-2 { animation-delay: 120ms; }
+.delay-3 { animation-delay: 180ms; }
+.delay-4 { animation-delay: 240ms; }
+.delay-5 { animation-delay: 300ms; }
