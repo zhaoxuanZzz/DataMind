@@ -8,6 +8,7 @@ import {
   ApiOutlined,
   FileTextOutlined,
   AppstoreOutlined,
+  RobotOutlined,
 } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
@@ -29,6 +30,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
       key: '/',
       icon: <HomeOutlined />,
       label: '工作台',
+    },
+    {
+      key: '/chat',
+      icon: <RobotOutlined />,
+      label: 'Agent 对话',
     },
     {
       key: '/query',
