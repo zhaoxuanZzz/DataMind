@@ -14,9 +14,10 @@ def register_all_connectors():
         category=UserWarning,
         module=r"pymilvus\.client.*",
     )
-    from app.connectors import mysql, postgresql, chroma, milvus
+    from app.connectors import mysql, postgresql, sqlite, chroma, milvus
     
     ConnectorFactory.register(DataSourceType.MYSQL, mysql.MySQLConnector)
     ConnectorFactory.register(DataSourceType.POSTGRESQL, postgresql.PostgreSQLConnector)
+    ConnectorFactory.register(DataSourceType.SQLITE, sqlite.SQLiteConnector)
     ConnectorFactory.register(DataSourceType.CHROMADB, chroma.ChromaDBConnector)
     ConnectorFactory.register(DataSourceType.MILVUS, milvus.MilvusConnector)

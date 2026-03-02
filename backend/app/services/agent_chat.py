@@ -467,10 +467,14 @@ class AgentChatService:
     def _fallback_sql_generation(self, query_text: str, schema_info: str) -> str:
         """规则化SQL生成（无LLM时）"""
         tables = []
+        table_columns: dict[str, list[dict]] = {}
         try:
             schema_data = json.loads(schema_info)
             if isinstance(schema_data, dict):
-                tables = list(schema_data.keys())
+                for tname, cols in schema_data.items():
+                    tables.append(tname)
+                    if isinstance(cols, list):
+                        table_columns[tname] = cols
             elif isinstance(schema_data, list):
                 for item in schema_data:
                     if isinstance(item, dict) and "table_name" in item:
@@ -483,23 +487,127 @@ class AgentChatService:
         if not tables:
             return "SELECT 'No tables found' AS message"
 
-        target_table = tables[0]
+        TABLE_ZH_MAP = {
+            "orders": ["订单", "下单", "购买", "买", "成交"],
+            "order_items": ["订单明细", "订单详情", "订单商品", "商品明细"],
+            "products": ["商品", "产品", "货品", "SKU"],
+            "customers": ["客户", "用户", "顾客", "会员", "买家"],
+            "categories": ["分类", "类别", "类目", "品类"],
+            "daily_stats": ["每日", "日统计", "日报", "每天", "天", "日均", "趋势", "走势"],
+        }
+
+        text_lower = query_text.lower()
+        target_table = None
+
         for t in tables:
-            t_lower = t.lower()
-            text_lower = query_text.lower()
-            if t_lower in text_lower or any(
-                kw in t_lower
-                for kw in self._extract_keywords(text_lower)
-            ):
+            zh_keywords = TABLE_ZH_MAP.get(t.lower(), [])
+            if any(kw in text_lower for kw in zh_keywords):
+                target_table = t
+                break
+            if t.lower() in text_lower:
                 target_table = t
                 break
 
-        if any(kw in query_text for kw in ["统计", "总计", "多少", "COUNT", "count"]):
-            return f"SELECT COUNT(*) AS total FROM {target_table}"
-        if any(kw in query_text for kw in ["TOP", "top", "排名", "排行"]):
-            match = re.search(r"(?:TOP|top)\s*(\d+)", query_text)
-            limit = int(match.group(1)) if match else 10
-            return f"SELECT * FROM {target_table} ORDER BY 1 DESC LIMIT {limit}"
+        if not target_table:
+            target_table = tables[0]
+
+        cols = table_columns.get(target_table, [])
+        col_names = [c.get("name", "") if isinstance(c, dict) else str(c) for c in cols]
+
+        def find_col(hints: list[str], fallback: str = "") -> str:
+            for h in hints:
+                for c in col_names:
+                    if h in c.lower():
+                        return c
+            return fallback
+
+        if any(kw in text_lower for kw in ["趋势", "走势", "每日", "每天", "变化", "近"]):
+            date_col = find_col(["date", "日期"], "date")
+            amount_col = find_col(["revenue", "amount", "收入", "销售", "金额"], "revenue")
+            count_col = find_col(["order_count", "count", "数量"], "order_count")
+            days = 30
+            m = re.search(r"(\d+)\s*[天日]", query_text)
+            if m:
+                days = int(m.group(1))
+            if target_table == "daily_stats":
+                return (
+                    f"SELECT {date_col} AS 日期, {count_col} AS 订单数, {amount_col} AS 收入 "
+                    f"FROM {target_table} ORDER BY {date_col} DESC LIMIT {days}"
+                )
+            return (
+                f"SELECT date(order_date) AS 日期, COUNT(*) AS 订单数, "
+                f"ROUND(SUM(total_amount),2) AS 总金额 "
+                f"FROM orders GROUP BY date(order_date) "
+                f"ORDER BY 日期 DESC LIMIT {days}"
+            )
+
+        if any(kw in text_lower for kw in ["占比", "比例", "分布", "构成", "各", "每个"]):
+            if "分类" in text_lower or "类别" in text_lower or "品类" in text_lower:
+                return (
+                    "SELECT p.category AS 类别, COUNT(oi.id) AS 销量, "
+                    "ROUND(SUM(oi.subtotal),2) AS 销售额 "
+                    "FROM order_items oi JOIN products p ON oi.product_id=p.id "
+                    "GROUP BY p.category ORDER BY 销售额 DESC"
+                )
+            if "城市" in text_lower or "地区" in text_lower:
+                return (
+                    "SELECT c.city AS 城市, COUNT(o.id) AS 订单数 "
+                    "FROM orders o JOIN customers c ON o.customer_id=c.id "
+                    "GROUP BY c.city ORDER BY 订单数 DESC"
+                )
+            if "支付" in text_lower or "付款" in text_lower:
+                return (
+                    "SELECT payment_method AS 支付方式, COUNT(*) AS 订单数 "
+                    "FROM orders GROUP BY payment_method ORDER BY 订单数 DESC"
+                )
+            if "状态" in text_lower:
+                return (
+                    "SELECT status AS 状态, COUNT(*) AS 数量 "
+                    "FROM orders GROUP BY status ORDER BY 数量 DESC"
+                )
+            if "性别" in text_lower:
+                return (
+                    "SELECT gender AS 性别, COUNT(*) AS 人数 "
+                    "FROM customers GROUP BY gender"
+                )
+
+        if any(kw in text_lower for kw in ["top", "排名", "排行", "最高", "最多", "最大"]):
+            m = re.search(r"(?:top|TOP|前)\s*(\d+)", query_text)
+            limit = int(m.group(1)) if m else 10
+            if "商品" in text_lower or "产品" in text_lower:
+                return (
+                    f"SELECT p.name AS 商品, ROUND(SUM(oi.subtotal),2) AS 销售额, "
+                    f"SUM(oi.quantity) AS 销量 "
+                    f"FROM order_items oi JOIN products p ON oi.product_id=p.id "
+                    f"GROUP BY p.name ORDER BY 销售额 DESC LIMIT {limit}"
+                )
+            if "客户" in text_lower or "用户" in text_lower or "顾客" in text_lower:
+                return (
+                    f"SELECT c.name AS 客户, ROUND(SUM(o.total_amount),2) AS 消费总额, "
+                    f"COUNT(o.id) AS 订单数 "
+                    f"FROM orders o JOIN customers c ON o.customer_id=c.id "
+                    f"WHERE o.status='completed' "
+                    f"GROUP BY c.id ORDER BY 消费总额 DESC LIMIT {limit}"
+                )
+
+        if any(kw in text_lower for kw in ["对比", "比较", "vs", "环比", "同比"]):
+            return (
+                "SELECT strftime('%Y-%m', order_date) AS 月份, "
+                "COUNT(*) AS 订单数, ROUND(SUM(total_amount),2) AS 销售额 "
+                "FROM orders WHERE status='completed' "
+                "GROUP BY 月份 ORDER BY 月份"
+            )
+
+        if any(kw in text_lower for kw in ["统计", "总计", "多少", "count", "总数"]):
+            return f"SELECT COUNT(*) AS 总数 FROM {target_table}"
+
+        if any(kw in text_lower for kw in ["平均", "均值", "avg"]):
+            amount_col = find_col(["amount", "price", "total", "revenue"], "")
+            if amount_col:
+                return f"SELECT ROUND(AVG({amount_col}),2) AS 平均值 FROM {target_table}"
+
+        if any(kw in text_lower for kw in ["列出", "查看", "显示", "所有", "列表"]):
+            return f"SELECT * FROM {target_table} LIMIT 20"
 
         return f"SELECT * FROM {target_table} LIMIT 100"
 

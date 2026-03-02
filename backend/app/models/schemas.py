@@ -10,6 +10,7 @@ class DataSourceType(str, Enum):
     """数据源类型"""
     MYSQL = "mysql"
     POSTGRESQL = "postgresql"
+    SQLITE = "sqlite"
     CHROMADB = "chroma"
     MILVUS = "milvus"
 
