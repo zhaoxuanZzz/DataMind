@@ -2,6 +2,7 @@
 export enum DataSourceType {
   MYSQL = 'mysql',
   POSTGRESQL = 'postgresql',
+  SQLITE = 'sqlite',
   CHROMADB = 'chroma',
   MILVUS = 'milvus',
 }
