@@ -7,6 +7,7 @@ import {
   ApiOutlined,
   ThunderboltOutlined,
   RocketOutlined,
+  RobotOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 
@@ -17,12 +18,20 @@ export default function Home() {
 
   const quickActions = [
     {
+      title: 'Agent 智能对话',
+      description: '与AI助手对话，自然语言查询数据，自动生成SQL和图表',
+      icon: <RobotOutlined style={{ fontSize: 32, color: '#722ed1' }} />,
+      action: () => navigate('/chat'),
+      buttonText: '开始对话',
+      buttonType: 'primary' as const,
+    },
+    {
       title: '查询工作台',
       description: '使用自然语言进行数据查询和分析，支持多种图表展示',
       icon: <SearchOutlined style={{ fontSize: 32, color: '#1890ff' }} />,
       action: () => navigate('/query'),
       buttonText: '开始查询',
-      buttonType: 'primary' as const,
+      buttonType: 'default' as const,
     },
     {
       title: '模板管理',

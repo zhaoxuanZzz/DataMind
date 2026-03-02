@@ -136,3 +136,31 @@ class QuotaUsage(Base):
     success_rate = Column(Float, default=0.0)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ChatSession(Base):
+    """对话会话表"""
+    __tablename__ = "chat_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), nullable=False, default="新对话")
+    data_source_id = Column(Integer, nullable=True, index=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ChatMessage(Base):
+    """对话消息表"""
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, nullable=False, index=True)
+    role = Column(String(20), nullable=False)  # user / assistant
+    content = Column(Text, nullable=False)
+    message_type = Column(String(20), nullable=False, default="text")  # text / chart / table / error
+    chart_type = Column(String(50), nullable=True)
+    chart_option = Column(JSON, nullable=True)
+    table_data = Column(JSON, nullable=True)
+    table_columns = Column(JSON, nullable=True)
+    generated_sql = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)

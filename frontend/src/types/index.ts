@@ -249,6 +249,63 @@ export interface TemplateVersion {
   created_at: string
 }
 
+// ========== Agent 对话相关 ==========
+
+export enum ChatMessageRole {
+  USER = 'user',
+  ASSISTANT = 'assistant',
+}
+
+export enum ChatMessageType {
+  TEXT = 'text',
+  CHART = 'chart',
+  TABLE = 'table',
+  ERROR = 'error',
+}
+
+export interface ChatMessage {
+  id: number
+  session_id: number
+  role: ChatMessageRole
+  content: string
+  message_type: ChatMessageType
+  chart_type?: string
+  chart_option?: Record<string, any>
+  table_data?: Array<Record<string, any>>
+  table_columns?: string[]
+  generated_sql?: string
+  created_at: string
+}
+
+export interface ChatSession {
+  id: number
+  title: string
+  data_source_id?: number | null
+  created_at: string
+  updated_at: string
+  messages: ChatMessage[]
+}
+
+export interface ChatSessionListItem {
+  id: number
+  title: string
+  data_source_id?: number | null
+  created_at: string
+  updated_at: string
+  message_count: number
+  last_message?: string | null
+}
+
+export interface ChatSendMessage {
+  content: string
+  data_source_id?: number
+}
+
+export interface ChatSessionCreate {
+  title?: string
+  data_source_id?: number
+}
+
 // 查询历史
 export interface QueryHistory {
   id: number

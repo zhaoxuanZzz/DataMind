@@ -351,3 +351,76 @@ class ModelGatewayStatsResponse(BaseModel):
     """模型网关统计响应"""
     providers: list[ProviderStat] = Field(default_factory=list)
     models: list[ModelStat] = Field(default_factory=list)
+
+
+# ========== Agent 对话相关 ==========
+
+class ChatMessageRole(str, Enum):
+    """消息角色"""
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+class ChatMessageType(str, Enum):
+    """消息类型"""
+    TEXT = "text"
+    CHART = "chart"
+    TABLE = "table"
+    ERROR = "error"
+
+
+class ChatSendMessage(BaseModel):
+    """发送聊天消息请求"""
+    content: str = Field(..., description="消息内容")
+    data_source_id: Optional[int] = Field(None, description="数据源ID（可在对话中指定）")
+
+
+class ChatMessageResponse(BaseModel):
+    """聊天消息响应"""
+    id: int
+    session_id: int
+    role: ChatMessageRole
+    content: str
+    message_type: ChatMessageType = ChatMessageType.TEXT
+    chart_type: Optional[str] = None
+    chart_option: Optional[dict[str, Any]] = None
+    table_data: Optional[list[dict[str, Any]]] = None
+    table_columns: Optional[list[str]] = None
+    generated_sql: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionCreate(BaseModel):
+    """创建会话请求"""
+    title: Optional[str] = Field(None, description="会话标题")
+    data_source_id: Optional[int] = Field(None, description="默认数据源ID")
+
+
+class ChatSessionResponse(BaseModel):
+    """会话响应"""
+    id: int
+    title: str
+    data_source_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    messages: list[ChatMessageResponse] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionListItem(BaseModel):
+    """会话列表项"""
+    id: int
+    title: str
+    data_source_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    message_count: int = 0
+    last_message: Optional[str] = None
+
+    class Config:
+        from_attributes = True
