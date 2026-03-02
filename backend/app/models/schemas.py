@@ -367,6 +367,7 @@ class ChatMessageType(str, Enum):
     TEXT = "text"
     CHART = "chart"
     TABLE = "table"
+    PLAN = "plan"
     ERROR = "error"
 
 
@@ -388,6 +389,7 @@ class ChatMessageResponse(BaseModel):
     table_data: Optional[list[dict[str, Any]]] = None
     table_columns: Optional[list[str]] = None
     generated_sql: Optional[str] = None
+    plan_data: Optional[dict[str, Any]] = None
     created_at: datetime
 
     class Config:

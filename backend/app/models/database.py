@@ -157,10 +157,11 @@ class ChatMessage(Base):
     session_id = Column(Integer, nullable=False, index=True)
     role = Column(String(20), nullable=False)  # user / assistant
     content = Column(Text, nullable=False)
-    message_type = Column(String(20), nullable=False, default="text")  # text / chart / table / error
+    message_type = Column(String(20), nullable=False, default="text")  # text / chart / table / plan / error
     chart_type = Column(String(50), nullable=True)
     chart_option = Column(JSON, nullable=True)
     table_data = Column(JSON, nullable=True)
     table_columns = Column(JSON, nullable=True)
     generated_sql = Column(Text, nullable=True)
+    plan_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)

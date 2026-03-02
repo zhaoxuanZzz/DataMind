@@ -123,6 +123,7 @@ async def get_session(
                 table_data=m.table_data,
                 table_columns=m.table_columns,
                 generated_sql=m.generated_sql,
+                plan_data=m.plan_data,
                 created_at=m.created_at,
             )
             for m in messages
@@ -168,6 +169,7 @@ async def send_message(
             table_data=m.table_data,
             table_columns=m.table_columns,
             generated_sql=m.generated_sql,
+            plan_data=m.plan_data,
             created_at=m.created_at,
         )
         for m in all_msgs

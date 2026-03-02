@@ -70,8 +70,13 @@ class AgentChatService:
         reply_messages: list[ChatMessage] = []
 
         is_query = self._detect_query_intent(user_content)
+        is_plan = self._detect_plan_intent(user_content)
 
-        if is_query and effective_ds_id:
+        if is_plan and effective_ds_id:
+            reply_messages = await self._handle_plan_query(
+                session_id, user_content, effective_ds_id
+            )
+        elif is_query and effective_ds_id:
             reply_messages = await self._handle_data_query(
                 session_id, user_content, effective_ds_id
             )
@@ -611,6 +616,169 @@ class AgentChatService:
 
         return f"SELECT * FROM {target_table} LIMIT 100"
 
+    def _detect_plan_intent(self, text: str) -> bool:
+        """检测是否需要Plan模式（复杂多步骤分析任务）"""
+        strong_triggers = [
+            "综合分析", "全面分析", "深入分析", "多维分析", "分析报告",
+            "完整分析", "全方位", "多角度",
+        ]
+        if any(kw in text for kw in strong_triggers):
+            return True
+
+        multi_keywords = [
+            "并且", "同时", "然后", "接着", "以及", "还要",
+            "对比分析", "交叉分析", "关联分析",
+        ]
+        analysis_dims = ["趋势", "占比", "分布", "排名", "对比", "分类", "排行", "增长"]
+        dim_count = sum(1 for kw in analysis_dims if kw in text)
+        if dim_count >= 2:
+            return True
+        multi_count = sum(1 for kw in multi_keywords if kw in text)
+        if multi_count >= 1 and self._detect_query_intent(text):
+            return True
+        return any(re.search(p, text) for p in [r"先.+再.+", r"第一.+第二"])
+
+    def _build_plan_steps(self, user_content: str, ds_id: int) -> list[dict]:
+        """根据用户意图构建计划步骤"""
+        text = user_content.lower()
+        steps = []
+        step_id = 0
+
+        if any(kw in text for kw in ["概览", "概况", "总体", "全面", "综合", "完整"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "数据概览",
+                "description": "统计核心指标（总订单、总收入、客户数）",
+                "query_hint": "统计总数", "status": "pending", "result": None,
+            })
+
+        if any(kw in text for kw in ["趋势", "走势", "变化", "增长"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "趋势分析",
+                "description": "查询时间序列数据，分析变化趋势",
+                "query_hint": "查询最近30天的每日订单数量趋势", "status": "pending", "result": None,
+            })
+
+        if any(kw in text for kw in ["分布", "占比", "比例", "构成", "分类", "类别"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "分布分析",
+                "description": "按维度分组统计，分析数据分布",
+                "query_hint": "统计各产品类别的销售额占比", "status": "pending", "result": None,
+            })
+
+        if any(kw in text for kw in ["排名", "top", "最高", "最多", "最好", "排行"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "排名分析",
+                "description": "找出表现最好的项目",
+                "query_hint": "列出销售额TOP10的商品", "status": "pending", "result": None,
+            })
+
+        if any(kw in text for kw in ["对比", "比较", "vs", "环比", "同比"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "对比分析",
+                "description": "多维度对比数据差异",
+                "query_hint": "对比每个月的销售额", "status": "pending", "result": None,
+            })
+
+        if any(kw in text for kw in ["城市", "地区", "区域", "地域"]):
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "区域分析",
+                "description": "按地区维度分析数据分布",
+                "query_hint": "查看各城市的订单分布", "status": "pending", "result": None,
+            })
+
+        if not steps:
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "数据概览",
+                "description": "统计核心指标",
+                "query_hint": "统计总数", "status": "pending", "result": None,
+            })
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "趋势分析",
+                "description": "查询近期趋势变化",
+                "query_hint": "查询最近30天的每日订单数量趋势", "status": "pending", "result": None,
+            })
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "分布分析",
+                "description": "分析关键维度分布",
+                "query_hint": "统计各产品类别的销售额占比", "status": "pending", "result": None,
+            })
+            step_id += 1
+            steps.append({
+                "id": step_id, "title": "排名分析",
+                "description": "识别头部表现者",
+                "query_hint": "列出销售额TOP10的商品", "status": "pending", "result": None,
+            })
+
+        return steps
+
+    async def _handle_plan_query(
+        self, session_id: int, user_content: str, data_source_id: int
+    ) -> list[ChatMessage]:
+        """处理Plan模式查询 — 将复杂任务分解为多步骤执行"""
+        steps = self._build_plan_steps(user_content, data_source_id)
+        total = len(steps)
+
+        plan_msg = self._save_message(
+            session_id,
+            ChatMessageRole.ASSISTANT.value,
+            f"📋 已创建分析计划（共 {total} 个步骤）",
+            ChatMessageType.PLAN.value,
+            plan_data={"steps": steps, "status": "running", "current_step": 1},
+        )
+        result_messages: list[ChatMessage] = [plan_msg]
+
+        for i, step in enumerate(steps):
+            step["status"] = "running"
+            plan_msg.plan_data = {"steps": steps, "status": "running", "current_step": i + 1}
+            self.db.commit()
+
+            try:
+                query_msgs = await self._handle_data_query(
+                    session_id, step["query_hint"], data_source_id
+                )
+                step["status"] = "done"
+                result_messages.extend(query_msgs)
+            except Exception as e:
+                step["status"] = "error"
+                step["result"] = str(e)
+                err_msg = self._save_message(
+                    session_id,
+                    ChatMessageRole.ASSISTANT.value,
+                    f"步骤 {i+1} 执行出错: {str(e)}",
+                    ChatMessageType.ERROR.value,
+                )
+                result_messages.append(err_msg)
+
+        all_done = all(s["status"] == "done" for s in steps)
+        plan_msg.plan_data = {
+            "steps": steps,
+            "status": "completed" if all_done else "partial",
+            "current_step": total,
+        }
+        self.db.commit()
+        self.db.refresh(plan_msg)
+
+        summary_msg = self._save_message(
+            session_id,
+            ChatMessageRole.ASSISTANT.value,
+            f"✅ 分析计划已完成，共执行 **{total}** 个步骤。\n\n"
+            f"以上结果涵盖了：{'、'.join(s['title'] for s in steps)}。\n"
+            f"如需进一步分析某个维度，请继续提问。",
+            ChatMessageType.TEXT.value,
+        )
+        result_messages.append(summary_msg)
+
+        return result_messages
+
     def _extract_keywords(self, text: str) -> list[str]:
         """从文本中提取关键词"""
         stop_words = {"的", "了", "在", "是", "和", "有", "对", "从", "到", "用", "请"}
@@ -671,6 +839,7 @@ class AgentChatService:
         table_data: Optional[list] = None,
         table_columns: Optional[list] = None,
         generated_sql: Optional[str] = None,
+        plan_data: Optional[dict] = None,
     ) -> ChatMessage:
         msg = ChatMessage(
             session_id=session_id,
@@ -682,6 +851,7 @@ class AgentChatService:
             table_data=table_data,
             table_columns=table_columns,
             generated_sql=generated_sql,
+            plan_data=plan_data,
         )
         self.db.add(msg)
         self.db.commit()

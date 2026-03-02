@@ -261,6 +261,7 @@ export enum ChatMessageType {
   TEXT = 'text',
   CHART = 'chart',
   TABLE = 'table',
+  PLAN = 'plan',
   ERROR = 'error',
 }
 
@@ -275,6 +276,11 @@ export interface ChatMessage {
   table_data?: Array<Record<string, any>>
   table_columns?: string[]
   generated_sql?: string
+  plan_data?: {
+    steps: Array<{ id: number; title: string; description: string; status: string; result?: any }>
+    status: string
+    current_step: number
+  }
   created_at: string
 }
 
